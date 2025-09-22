@@ -1,7 +1,7 @@
 venv/
 .venv/
 .pylintrc
-__pycach__/
+__pycache__/
 
 .vscode
 .idea
@@ -9,3 +9,5 @@ __pycach__/
 
 db.sqlite3
 media/
+post_media/
+populate_database.py
