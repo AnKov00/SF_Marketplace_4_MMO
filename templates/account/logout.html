@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Выход - MMO Marketplace{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="mmo-card p-4 text-center">
+            <h2 class="mb-4">🚪 Выход из системы</h2>
+            
+            <div class="user-info bg-dark p-3 rounded mb-4">
+                <p>Вы вошли как: <strong>{{ user.username }}</strong></p>
+                <p>Email: <strong>{{ user.email }}</strong></p>
+            </div>
+            
+            <p class="mb-4">Вы уверены, что хотите выйти из вашего аккаунта?</p>
+            
+            <form method="post" action="{% url 'account_logout' %}">
+                {% csrf_token %}
+                {% if redirect_field_value %}
+                    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+                {% endif %}
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-danger">Да, выйти</button>
+                    <a href="/" class="btn btn-secondary">Отмена</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Добавить отзыв - MMO Marketplace{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="mmo-card p-4">
+            <h2>💬 Добавить отзыв к объявлению</h2>
+            <p class="text-muted">Объявление: <strong>"{{ post.title }}"</strong></p>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="id_content" class="form-label">Текст отзыва:</label>
+                    <textarea name="content" class="form-control" id="id_content" rows="4" 
+                              placeholder="Напишите ваш отзыв здесь..." required></textarea>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-warning">📨 Отправить отзыв</button>
+                    <a href="{% url 'post_detail' post.slug %}" class="btn btn-secondary">← Назад</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

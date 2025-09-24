@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Подтверждение email - MMO Marketplace{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="mmo-card p-4 text-center">
+            {% if confirmation %}
+                <div class="alert alert-success">
+                    <h2>✅ Email подтвержден!</h2>
+                </div>
+                <p class="lead">Ваш email <strong>{{ confirmation.email_address.email }}</strong> успешно подтвержден.</p>
+                <p>Теперь вы можете войти в свой аккаунт и пользоваться всеми возможностями сайта.</p>
+                
+                <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">Продолжить</button>
+                </form>
+            {% else %}
+                <div class="alert alert-danger">
+                    <h2>❌ Ошибка подтверждения</h2>
+                </div>
+                <p>Ссылка для подтверждения email недействительна или устарела.</p>
+                <p>Возможно, ссылка уже была использована или прошло более 1 дня с момента отправки письма.</p>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'account_email' %}" class="btn btn-warning">Запросить новую ссылку</a>
+                    <a href="/" class="btn btn-secondary">На главную</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

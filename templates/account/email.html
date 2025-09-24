@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Управление email - MMO Marketplace{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="mmo-card p-4">
+            <h2 class="mb-4">📧 Ваш email адрес</h2>
+            
+            <div class="email-info bg-dark p-3 rounded mb-4">
+                <p><strong>Текущий email:</strong> {{ user.email }}</p>
+                <p>
+                    <strong>Статус:</strong> 
+                    {% if user.emailaddress_set.first.verified %}
+                        <span class="text-success">✓ Подтвержден</span>
+                    {% else %}
+                        <span class="text-warning">⏳ Ожидает подтверждения</span>
+                    {% endif %}
+                </p>
+            </div>
+
+            {% if not user.emailaddress_set.first.verified %}
+                <div class="alert alert-warning">
+                    <p>📨 <strong>Email не подтвержден!</strong></p>
+                    <p>Для полного доступа к функциям сайта необходимо подтвердить email.</p>
+                    
+                    <form method="post" action="{% url 'account_email' %}">
+                        {% csrf_token %}
+                        <button type="submit" name="action_send" class="btn btn-warning">
+                            Отправить подтверждение повторно
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+
+            <div class="text-center mt-4">
+                <a href="/" class="btn btn-secondary">← На главную</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }} - MMO Marketplace{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <a href="{% url 'post_list' %}" class="btn btn-secondary">← Назад к списку</a>
+    {% if user.is_authenticated and user != post.author %}
+        <a href="{% url 'add_response' post.slug %}" class="btn btn-warning">💬 Оставить отзыв</a>
+    {% endif %}
+</div>
+
+<!-- Основная информация об объявлении -->
+<div class="mmo-card p-4 mb-4">
+    <div class="row">
+        <div class="col-md-8">
+            <h1>{{ post.title }}</h1>
+            <div class="d-flex gap-2 mb-3 flex-wrap">
+                <span class="badge bg-danger">{{ post.category.name }}</span>
+                <span class="badge {% if post.type_post == 'wts' %}bg-success{% else %}bg-info{% endif %}">
+                    {% if post.type_post == 'wts' %}💰 Продажа{% else %}🛒 Покупка{% endif %}
+                </span>
+                <span class="badge bg-warning text-dark">{{ post.price }} золота</span>
+                {% if not post.is_active %}
+                    <span class="badge bg-secondary">Неактивно</span>
+                {% endif %}
+            </div>
+            <p class="text-muted">👤 Автор: {{ post.author.username }} | 📅 {{ post.updated_at|date:"d.m.Y H:i" }}</p>
+        </div>
+    </div>
+
+    <!-- Галерея медиафайлов -->
+    {% if post.media.all %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4>🖼️ Медиафайлы ({{ post.media.count }})</h4>
+            <div class="row">
+                {% for media in post.media.all %}
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="media-item text-center">
+                        {% if media.file %}
+                            {% if media.file.name|lower|slice:"-4:" in '.jpg,.jpeg,.png,.gif,.webp,.bmp' %}
+                                <img src="{{ media.file.url }}" alt="Изображение {{ forloop.counter }}" 
+                                     class="img-fluid rounded mb-2" 
+                                     style="max-height: 300px; width: auto; object-fit: contain;">
+                            {% else %}
+                                <div class="bg-dark rounded p-3 text-center" style="min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                    <span class="text-muted">🎥 {{ media.filename }}</span>
+                                    <a href="{{ media.file.url }}" class="text-warning mt-2" download>📥 Скачать</a>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="bg-dark rounded p-3 text-center" style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                                <span class="text-muted">📄 Файл не найден</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        📭 К этому объявлению не прикреплены медиафайлы
+    </div>
+    {% endif %}
+
+    <!-- Описание -->
+    <div class="mb-4">
+        <h4>📖 Описание</h4>
+        <div class="post-content bg-dark p-3 rounded">
+            {{ post.content|linebreaks }}
+        </div>
+    </div>
+</div>
+
+<!-- Отзывы -->
+<div class="mmo-card p-4">
+    <h3>💬 Отзывы ({{ responses.count }})</h3>
+    
+    {% if responses %}
+        {% for response in responses %}
+        <div class="response-card p-3 mb-3 rounded">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong class="text-warning">👤 {{ response.author.username }}</strong>
+                    <span class="badge bg-success ms-2">✓ Принят</span>
+                </div>
+                <small class="text-muted">{{ response.created_at|date:"d.m.Y H:i" }}</small>
+            </div>
+            <p class="mb-0 mt-2">{{ response.content }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted">📭 Пока нет отзывов на это объявление.</p>
+            {% if user.is_authenticated and user != post.author %}
+                <p>Будьте первым, кто оставит отзыв!</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.mmo-card {
+    background: rgba(30, 55, 153, 0.8);
+    border: 2px solid #4a69bd;
+    border-radius: 10px;
+}
+.response-card {
+    background: rgba(74, 105, 189, 0.6);
+    border: 1px solid #4a69bd;
+}
+.post-content {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border-left: 3px solid #f6b93b;
+}
+.media-item img {
+    transition: transform 0.3s ease;
+}
+.media-item img:hover {
+    transform: scale(1.05);
+}
+</style>
+{% endblock %}

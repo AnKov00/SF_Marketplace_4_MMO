@@ -71,7 +71,6 @@ class Post(models.Model):
                     logger.info(f'Файл удалён: {file_path}')
             except Exception as e:
                 logger.error(f'Ошибка при удалении {file_path}: {e}')
-
     
 
 class PostMedia(models.Model):
@@ -138,6 +137,7 @@ class PostMedia(models.Model):
 
     def __str__(self):
         return f'Файл для {self.post.title}'
+
 
 class Response(models.Model):
     """

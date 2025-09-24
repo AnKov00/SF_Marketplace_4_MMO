@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Подтверждение email - MMO Marketplace{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="mmo-card p-4 text-center">
+            <div class="alert alert-success">
+                <h2>✅ Письмо отправлено!</h2>
+            </div>
+            
+            <p class="lead">Мы отправили письмо с ссылкой для подтверждения на вашу электронную почту.</p>
+            <p>Пожалуйста, проверьте вашу почту и перейдите по ссылке для завершения регистрации.</p>
+            
+            <div class="mt-4">
+                <a href="/" class="btn btn-warning">Вернуться на главную</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
