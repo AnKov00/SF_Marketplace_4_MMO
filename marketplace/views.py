@@ -1,5 +1,5 @@
 from django.views.generic import ListView, DetailView, CreateView
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Post, Category, Response
 
@@ -66,3 +66,20 @@ class CreateResponse(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context['post'] = Post.objects.get(slug=self.kwargs['slug'])
         return context
+    
+
+class CreatePostView(LoginRequiredMixin, CreateView):
+    '''
+     title, type_post, content, price, category
+    '''
+    model = Post
+    fields = ['title', 'type_post', 'content', 'price', 'category']
+    template_name = 'marketplace/create_post.html'
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+    
+    def get_success_url(self) -> str:
+        return reverse('post_detail', kwargs={'slug': self.object.slug})
+    

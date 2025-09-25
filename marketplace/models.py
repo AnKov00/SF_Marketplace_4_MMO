@@ -5,6 +5,8 @@ from django.contrib.auth.models import User
 from django.core.files.storage import default_storage
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
+from django.utils.text import slugify
+import uuid
 logger=logging.getLogger('marketplace')
 
 
@@ -71,6 +73,27 @@ class Post(models.Model):
                     logger.info(f'Файл удалён: {file_path}')
             except Exception as e:
                 logger.error(f'Ошибка при удалении {file_path}: {e}')
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            # Базовый slug из title
+            base_slug = slugify(self.title)
+            slug = base_slug
+            
+            # Проверяем уникальность, добавляем UUID если нужно
+            counter = 1
+            while Post.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+                if counter > 10:
+                    # Используем UUID для гарантии уникальности
+                    slug = f"{base_slug}-{uuid.uuid4().hex[:8]}"
+                    break
+                    
+            self.slug = slug
+        if not self.slug:
+            self.slug = f'post-{uuid.uuid4().hex[:8]}'
+        super().save(*args, **kwargs)
     
 
 class PostMedia(models.Model):
