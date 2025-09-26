@@ -1,5 +1,5 @@
 from django.db.models.query import QuerySet
-from django.views.generic import ListView, DetailView, CreateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.urls import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Post, Category, Response
@@ -50,6 +50,14 @@ class MyPostList(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['total_posts'] = self.get_queryset().count()
         return context
+
+
+class PostEdit(LoginRequiredMixin, UpdateView):
+    model = Post
+    fields = ['title', 'category', 'content', 'price', 'is_active']
+    template_name = 'marketplace/edit_post.html'
+    context_object_name = 'post'
+
 
 class PostDetailView(DetailView):
     model = Post

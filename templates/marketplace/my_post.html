@@ -62,15 +62,9 @@
                         <a href="{% url 'post_detail' post.slug %}" class="btn btn-outline-warning btn-sm flex-fill">
                             🔍 Просмотреть
                         </a>
-                        {% if post.is_active %}
-                            <button class="btn btn-outline-secondary btn-sm" title="Деактивировать">
-                                ⏸️
-                            </button>
-                        {% else %}
-                            <button class="btn btn-outline-success btn-sm" title="Активировать">
-                                ▶️
-                            </button>
-                        {% endif %}
+                        <a href= "{% url 'edit_post' post.slug %}" class="btn btn-outline-warning btn-sm flex-fill">
+                            🛠️ Редактировать
+                        </a>
                     </div>
                 </div>
             </div>
