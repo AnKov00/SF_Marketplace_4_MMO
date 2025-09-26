@@ -1,8 +1,11 @@
-from django.db.models.query import QuerySet
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Post, Category, Response
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+
+from .models import Post, Category, Response, PostMedia
+from .forms import PostForm, PostEditForm
 
 class PostView(ListView):
     model = Post
@@ -54,10 +57,29 @@ class MyPostList(LoginRequiredMixin, ListView):
 
 class PostEdit(LoginRequiredMixin, UpdateView):
     model = Post
-    fields = ['title', 'category', 'content', 'price', 'is_active']
+    form_class = PostEditForm
     template_name = 'marketplace/edit_post.html'
     context_object_name = 'post'
+    
+    def get_success_url(self):
+        return reverse_lazy('edit_post', kwargs={'slug': self.kwargs['slug']})
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        files = self.request.FILES.getlist('media_files')
+        for file in files:
+            try:
+                PostMedia.objects.create(post=self.object, file=file)
+            except Exception as e:
+                print(f'Ошибка загрузки файла: {e}. Изменения поста сохранены')
+
+        return response
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['media_files'] = self.object.media.all()
+        return context
+        
 
 class PostDetailView(DetailView):
     model = Post
@@ -72,7 +94,6 @@ class PostDetailView(DetailView):
         context['responses'] = self.object.post_response.filter(is_accepted=True)
         return context
  
-
 
 class CreateResponse(LoginRequiredMixin, CreateView):
     model = Response
@@ -98,13 +119,40 @@ class CreatePostView(LoginRequiredMixin, CreateView):
      title, type_post, content, price, category
     '''
     model = Post
-    fields = ['title', 'type_post', 'content', 'price', 'category']
+    form_class = PostForm
     template_name = 'marketplace/create_post.html'
 
     def form_valid(self, form):
         form.instance.author = self.request.user
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        files = self.request.FILES.getlist('media_files')
+        for file in files:
+            try:
+                PostMedia.objects.create(post=self.object, file=file)
+            except Exception as e:
+                print(f'Ошибка загрузки медиафайлов: {e}. Объявление сохранено.')
+        return response
+    
     
     def get_success_url(self) -> str:
         return reverse('post_detail', kwargs={'slug': self.object.slug})
     
+
+class DeleteMediaView(LoginRequiredMixin, DeleteView):
+    model = PostMedia
+    success_url = reverse_lazy('my_posts')
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object.post.author == request.user:
+            self.object.delete()
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': True})
+            return super().delete(request, *args, **kwargs)
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': 'Нет прав на удаление'})
+            return JsonResponse({'error': 'Нет прав на удаление'}, status=403)
+    
+    def get_success_url(self):
+        return reverse_lazy('edit_post', kwargs={'slug': self.object.post.slug})

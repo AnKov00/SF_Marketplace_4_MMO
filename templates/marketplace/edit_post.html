@@ -1,13 +1,180 @@
 {% extends "base.html" %}
 {% block title %}Редактировать объявление{% endblock title %}
 {% block content %}
-    {% if post.author == user %}
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button value="submit">Сохранить</button>
-    {% else %}
-        <h1>Вы не можете редактировать посты созданные другими пользователями!</h1>
-        <a href={% url 'post_list' %}>Вернуться к объявлениям</a>
-    {% endif %}    
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="mmo-card p-4">
+            {% if post.author == user %}
+                <h2 class="text-center mb-4">🛠️ Редактирование объявления</h2>
+                
+                <!-- Существующие медиафайлы -->
+                {% if media_files %}
+                <div class="mb-4">
+                    <h5>📁 Текущие медиафайлы:</h5>
+                    <div class="row">
+                        {% for media in media_files %}
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="media-item text-center">
+                                {% if media.file %}
+                                    {% if media.file.name|lower|slice:"-4:" in '.jpg,.jpeg,.png,.gif,.webp,.bmp' %}
+                                        <img src="{{ media.file.url }}" alt="Изображение {{ forloop.counter }}" 
+                                             class="img-fluid rounded mb-2" 
+                                             style="max-height: 150px; width: auto; object-fit: contain;">
+                                    {% else %}
+                                        <div class="bg-dark rounded p-3 text-center">
+                                            <span class="text-muted">🎥 Видео/Файл</span>
+                                            <br>
+                                            <a href="{{ media.file.url }}" class="text-warning mt-2" download>📥 Скачать</a>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                                <div class="mt-2">
+                                    <a href="{% url 'delete_media' media.id %}" class="btn btn-danger btn-sm" 
+                                       onclick="return confirm('Удалить этот файл?')">🗑️ Удалить</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        ❌ Пожалуйста, исправьте ошибки в форме
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_title" class="form-label">📌 Заголовок:</label>
+                                {{ form.title }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_category" class="form-label">📂 Категория:</label>
+                                {{ form.category }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_content" class="form-label">📖 Описание:</label>
+                        {{ form.content }}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_price" class="form-label">💰 Цена (в золоте):</label>
+                                {{ form.price }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_is_active" class="form-label">📊 Статус:</label>
+                                <div class="form-check form-switch mt-2">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="id_is_active">
+                                        Активное объявление
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_media_files" class="form-label">➕ Добавить медиафайлы:</label>
+                        {{ form.media_files }}
+                        <div class="form-text">{{ form.media_files.help_text }}</div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-warning flex-fill">💾 Сохранить изменения</button>
+                        <a href="{% url 'post_detail' post.slug %}" class="btn btn-secondary">👀 Просмотреть</a>
+                        <a href="{% url 'my_posts' %}" class="btn btn-outline-secondary">❌ Отмена</a>
+                    </div>
+                </form>
+            {% else %}
+                <div class="text-center">
+                    <h1>🚫 Доступ запрещен</h1>
+                    <p>Вы не можете редактировать посты, созданные другими пользователями!</p>
+                    <a href="{% url 'post_list' %}" class="btn btn-warning">← Вернуться к объявлениям</a>
+                </div>
+            {% endif %}    
+        </div>
+    </div>
+</div>
+
+<style>
+.mmo-card {
+    background: rgba(30, 55, 153, 0.8);
+    border: 2px solid #4a69bd;
+    border-radius: 10px;
+}
+.form-control, .form-select {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid #4a69bd;
+    color: white;
+}
+.form-control:focus, .form-select:focus {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #f6b93b;
+    color: white;
+}
+.form-check-input:checked {
+    background-color: #f6b93b;
+    border-color: #f6b93b;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // AJAX удаление медиафайлов
+    const deleteButtons = document.querySelectorAll('a[href*="delete_media"]');
+    
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            if (confirm('Вы уверены, что хотите удалить этот файл?')) {
+                const url = this.getAttribute('href');
+                
+                fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.closest('.col-md-3').remove();
+                        // Обновляем сообщение, если файлов не осталось
+                        const mediaItems = document.querySelectorAll('.media-item');
+                        if (mediaItems.length === 0) {
+                            const mediaSection = document.querySelector('.mb-4');
+                            if (mediaSection) {
+                                mediaSection.innerHTML = '<p>📭 Медиафайлов нет</p>';
+                            }
+                        }
+                    } else {
+                        alert('Ошибка при удалении файла: ' + (data.error || 'Неизвестная ошибка'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Ошибка при удалении файла');
+                });
+            }
+        });
+    });
+});
+</script>
 {% endblock content %}

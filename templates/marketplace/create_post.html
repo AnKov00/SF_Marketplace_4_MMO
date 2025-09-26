@@ -1,9 +1,106 @@
 {% extends "base.html" %}
 {% block title %}Создание объявления{% endblock title %}
 {% block content %}
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button value="submit">Сохранить</button>
-    </form>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="mmo-card p-4">
+            <h2 class="text-center mb-4">📝 Создание нового объявления</h2>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    ❌ Пожалуйста, исправьте ошибки в форме
+                </div>
+                {% endif %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="id_title" class="form-label">📌 Заголовок:</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger small">{{ form.title.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="id_category" class="form-label">📂 Категория:</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="text-danger small">{{ form.category.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="id_type_post" class="form-label">🎯 Тип объявления:</label>
+                            {{ form.type_post }}
+                            {% if form.type_post.errors %}
+                                <div class="text-danger small">{{ form.type_post.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="id_price" class="form-label">💰 Цена (в золоте):</label>
+                            {{ form.price }}
+                            {% if form.price.errors %}
+                                <div class="text-danger small">{{ form.price.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="id_content" class="form-label">📖 Описание:</label>
+                    {{ form.content }}
+                    {% if form.content.errors %}
+                        <div class="text-danger small">{{ form.content.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="id_media_files" class="form-label">🖼️ Медиафайлы:</label>
+                    {{ form.media_files }}
+                    <div class="form-text">{{ form.media_files.help_text }}</div>
+                    {% if form.media_files.errors %}
+                        <div class="text-danger small">{{ form.media_files.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-warning flex-fill">✅ Создать объявление</button>
+                    <a href="{% url 'post_list' %}" class="btn btn-secondary">❌ Отмена</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.mmo-card {
+    background: rgba(30, 55, 153, 0.8);
+    border: 2px solid #4a69bd;
+    border-radius: 10px;
+}
+.form-control, .form-select {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid #4a69bd;
+    color: white;
+}
+.form-control:focus, .form-select:focus {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #f6b93b;
+    color: white;
+}
+.form-control::placeholder {
+    color: #ccc;
+}
+</style>
 {% endblock content %}
