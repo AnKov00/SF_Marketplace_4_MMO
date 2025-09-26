@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0c2461 0%, #1e3799 100%);
+            color: #f7f7f7;
+            margin: 0;
+            padding: 20px;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(30, 55, 153, 0.9);
+            border: 2px solid #4a69bd;
+            border-radius: 10px;
+            padding: 30px;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #4a69bd;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #f6b93b;
+            margin: 0;
+        }
+        .content {
+            background: rgba(74, 105, 189, 0.6);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .post-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .button {
+            display: inline-block;
+            background: #f6b93b;
+            color: #2f3640;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #4a69bd;
+            color: #ccc;
+            font-size: 14px;
+        }
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            background: #f6b93b;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #2f3640;
+            margin-right: 15px;
+        }
+        .response-meta {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>⚔️ MMO Marketplace</h1>
+            <p>Уведомление о новом отзыве</p>
+        </div>
+        
+        <div class="post-info">
+            <h3>📌 Объявление: {{ post.title }}</h3>
+            <p><strong>💰 Цена:</strong> {{ post.price }} золота</p>
+            <p><strong>📅 Дата создания:</strong> {{ post.created_at|date:"d.m.Y H:i" }}</p>
+        </div>
+        
+        <div class="content">
+            <div class="response-meta">
+                <div class="user-avatar">👤</div>
+                <div>
+                    <h4 style="margin: 0; color: #f6b93b;">{{ response.author.username }}</h4>
+                    <p style="margin: 5px 0 0 0; color: #ccc;">
+                        оставил(а) отзыв {{ response.created_at|date:"d.m.Y в H:i" }}
+                    </p>
+                </div>
+            </div>
+            
+            <div style="background: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: 5px; border-left: 3px solid #f6b93b;">
+                <p style="margin: 0; font-style: italic;">"{{ response.content }}"</p>
+            </div>
+        </div>
+        
+        <div style="text-align: center;">
+            <p>Чтобы просмотреть отзыв и управлять им, перейдите на страницу объявления:</p>
+            <a href="{{ request.scheme }}://{{ request.get_host }}{% url 'post_detail' post.slug %}" class="button">
+                📖 Перейти к объявлению
+            </a>
+        </div>
+        
+        <div class="footer">
+            <p>Это автоматическое уведомление. Пожалуйста, не отвечайте на это письмо.</p>
+            <p>⚔️ MMO Marketplace © 2025</p>
+        </div>
+    </div>
+</body>
+</html>

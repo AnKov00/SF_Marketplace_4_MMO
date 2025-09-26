@@ -2,7 +2,9 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.urls import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
-from django.http import JsonResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 
 from .models import Post, Category, Response, PostMedia
 from .forms import PostForm, PostEditForm
@@ -102,8 +104,29 @@ class CreateResponse(LoginRequiredMixin, CreateView):
     
     def form_valid(self, form):
         form.instance.author = self.request.user
-        form.instance.post = Post.objects.get(slug=self.kwargs['slug'])
-        return super().form_valid(form)
+        form.instance.post = get_object_or_404(Post, slug=self.kwargs['slug'])
+        response = super().form_valid(form)
+        self.send_notification_email(form.instance)    
+        return response
+    
+    def send_notification_email(self, response):
+        try:
+            html_content = render_to_string(
+                'marketplace/response_notif.html',
+                {'response': response,
+                 'post': response.post,
+                 'author': response.author,}
+            )
+            msg = EmailMultiAlternatives(
+                subject=f'Новый отзыв к Вашему объявлению "{response.post.title}"',
+                body=f'Пользователь {response.author.username} оставил отзыв к Вашему объявлению "{response.post.title}": {response.content}',
+                from_email='mmo_marketplace@temp-mail.com',
+                to=[response.post.author.email],
+            )
+            msg.attach_alternative(html_content, 'text/html')
+            msg.send()
+        except Exception as e:
+            print(f'Ошибка отправки письма {e}')
     
     def get_success_url(self):
         return reverse_lazy('post_detail', kwargs={'slug': self.kwargs['slug']})

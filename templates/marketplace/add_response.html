@@ -7,7 +7,11 @@
     <div class="col-md-8">
         <div class="mmo-card p-4">
             <h2>💬 Добавить отзыв к объявлению</h2>
+            <div class="alert alert-info">
+                <strong>ℹ️ Информация:</strong> Автор объявления получит уведомление о вашем отзыве.
+            </div>
             <p class="text-muted">Объявление: <strong>"{{ post.title }}"</strong></p>
+            <p class="text-muted">Автор: <strong>@{{ post.author.username }}</strong></p>
             
             <form method="post">
                 {% csrf_token %}
@@ -16,14 +20,28 @@
                     <label for="id_content" class="form-label">Текст отзыва:</label>
                     <textarea name="content" class="form-control" id="id_content" rows="4" 
                               placeholder="Напишите ваш отзыв здесь..." required></textarea>
+                    <div class="form-text">Ваш отзыв будет виден после принятия его автором объявления.</div>
                 </div>
                 
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-warning">📨 Отправить отзыв</button>
-                    <a href="{% url 'post_detail' post.slug %}" class="btn btn-secondary">← Назад</a>
+                    <a href="{% url 'post_detail' post.slug %}" class="btn btn-secondary">← Назад к объявлению</a>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<style>
+.mmo-card {
+    background: rgba(30, 55, 153, 0.8);
+    border: 2px solid #4a69bd;
+    border-radius: 10px;
+}
+.alert-info {
+    background: rgba(74, 105, 189, 0.6);
+    border: 1px solid #4a69bd;
+    color: #f7f7f7;
+}
+</style>
 {% endblock %}
