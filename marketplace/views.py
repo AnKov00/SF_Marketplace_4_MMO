@@ -1,10 +1,11 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from django.contrib import messages
 
 from .models import Post, Category, Response, PostMedia
 from .forms import PostForm, PostEditForm
@@ -179,3 +180,106 @@ class DeleteMediaView(LoginRequiredMixin, DeleteView):
     
     def get_success_url(self):
         return reverse_lazy('edit_post', kwargs={'slug': self.object.post.slug})
+    
+
+class ResponseListView(LoginRequiredMixin, ListView):
+    model = Response
+    template_name = 'marketplace/response_list.html'
+    context_object_name = 'responses'
+    paginate_by = 15
+
+    def get_queryset(self):
+        queryset = Response.objects.filter(post__author=self.request.user)
+        post_slug = self.request.GET.get('post')
+        if post_slug:
+            queryset = queryset.filter(post__slug=post_slug)
+        return queryset.order_by('-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user_posts'] = Post.objects.filter(author=self.request.user)
+        context['total_responses'] = self.get_queryset().count()
+        return context
+    
+
+class ResponseUpdateView(LoginRequiredMixin, UpdateView):
+    """Принятие/отклонение отзыва"""
+    model = Response
+    fields = []
+    template_name = 'marketplace/response_confirm.html'
+    
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        action = request.POST.get('action')
+        
+        # Проверяем, что пользователь - автор объявления
+        if self.object.post.author != request.user:
+            messages.error(request, 'У вас нет прав для управления этим отзывом')
+            return self.get_success_url()
+        
+        if action == 'accept':
+            self.object.is_accepted = True
+            self.object.save()
+            messages.success(request, 'Отзыв принят и теперь виден на странице объявления')
+            
+            # Отправляем уведомление автору отзыва
+            self.send_acceptance_notification(self.object)
+            
+        elif action == 'reject':
+            self.object.is_accepted = False
+            self.object.save()
+            messages.info(request, 'Отзыв отклонен')
+        
+        elif action == 'delete':
+            post_slug = self.object.post.slug
+            self.object.delete()
+            messages.warning(request, 'Отзыв удален')
+            return redirect('response_list')
+        
+        return redirect(self.get_success_url())
+    
+    def send_acceptance_notification(self, response):
+        """Отправка уведомления автору отзыва о принятии"""
+        try:
+            if response.author.email:
+                html_content = render_to_string(
+                    'marketplace/response_accepted.html',
+                    {
+                        'response': response,
+                        'post': response.post,
+                    }
+                )
+                
+                msg = EmailMultiAlternatives(
+                    subject=f'Ваш отзыв принят на объявлении "{response.post.title}"',
+                    body=f'Автор объявления "{response.post.title}" принял ваш отзыв.',
+                    from_email='mmo_marketplace@example.com',
+                    to=[response.author.email],
+                )
+                msg.attach_alternative(html_content, "text/html")
+                msg.send()
+                
+        except Exception as e:
+            print(f"Ошибка при отправке уведомления о принятии: {e}")
+    
+    def get_success_url(self):
+        return reverse_lazy('response_list')
+
+
+class ResponseDeleteView(LoginRequiredMixin, DeleteView):
+    """Удаление отзыва"""
+    model = Response
+    template_name = 'marketplace/response_confirm.html'
+    
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object.post.author != request.user:
+            messages.error(request, 'У вас нет прав для удаления этого отзыва')
+            return redirect('response_list')
+        
+        self.object.delete()
+        messages.success(request, 'Отзыв успешно удален')
+        return redirect('response_list')
+    
+    def get_success_url(self):
+        return reverse_lazy('response_list')   

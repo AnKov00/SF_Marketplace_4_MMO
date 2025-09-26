@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block title %}Управление отзывами - MMO Marketplace{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>💬 Управление отзывами</h1>
+    <div class="btn-group">
+        <a href="{% url 'my_posts' %}" class="btn btn-outline-warning">📋 Мои объявления</a>
+        <a href="{% url 'post_list' %}" class="btn btn-outline-secondary">📰 Все объявления</a>
+    </div>
+</div>
+
+<!-- Статистика -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="mmo-card p-3 text-center">
+            <h4 class="text-warning">{{ total_responses }}</h4>
+            <p class="mb-0">Всего отзывов</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="mmo-card p-3 text-center">
+            <h4 class="text-success">{{ accepted_count }}</h4>
+            <p class="mb-0">Принято</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="mmo-card p-3 text-center">
+            <h4 class="text-warning">{{ pending_count }}</h4>
+            <p class="mb-0">Ожидают</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="mmo-card p-3 text-center">
+            <h4 class="text-info">{{ user_posts.count }}</h4>
+            <p class="mb-0">Мои объявления</p>
+        </div>
+    </div>
+</div>
+
+<!-- Фильтры и поиск -->
+<div class="mmo-card p-4 mb-4">
+    <form method="get" class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label">Статус</label>
+            <select name="status" class="form-select">
+                <option value="">Все отзывы</option>
+                <option value="accepted" {% if request.GET.status == 'accepted' %}selected{% endif %}>Принятые</option>
+                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Ожидающие</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Объявление</label>
+            <select name="post" class="form-select">
+                <option value="">Все объявления</option>
+                {% for post in user_posts %}
+                    <option value="{{ post.slug }}" {% if request.GET.post == post.slug %}selected{% endif %}>
+                        {{ post.title|truncatewords:3 }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Поиск</label>
+            <input type="text" name="search" class="form-control" 
+                   placeholder="Поиск по тексту или автору..." value="{{ request.GET.search }}">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-warning w-100">🔍 Применить</button>
+        </div>
+    </form>
+</div>
+
+<!-- Список отзывов -->
+{% if responses %}
+    <div class="responses-list">
+        {% for response in responses %}
+        <div class="mmo-card p-4 mb-3 {% if response.is_accepted %}border-success{% else %}border-warning{% endif %}">
+            <div class="row">
+                <div class="col-md-8">
+                    <!-- Заголовок -->
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5>
+                            <a href="{% url 'post_detail' response.post.slug %}" class="text-decoration-none">
+                                📌 {{ response.post.title }}
+                            </a>
+                        </h5>
+                        <span class="badge {% if response.is_accepted %}bg-success{% else %}bg-warning{% endif %}">
+                            {% if response.is_accepted %}✅ Принят{% else %}⏳ Ожидает{% endif %}
+                        </span>
+                    </div>
+                    
+                    <!-- Информация об авторе -->
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="text-warning">👤 {{ response.author.username }}</span>
+                        <span class="text-muted mx-2">•</span>
+                        <small class="text-muted">{{ response.created_at|date:"d.m.Y H:i" }}</small>
+                    </div>
+                    
+                    <!-- Текст отзыва -->
+                    <div class="response-content bg-dark p-3 rounded mb-3">
+                        <p class="mb-0">{{ response.content }}</p>
+                    </div>
+                </div>
+                
+                <!-- Управление -->
+                <div class="col-md-4">
+                    <div class="d-grid gap-2">
+                        {% if not response.is_accepted %}
+                            <form method="post" action="{% url 'response_update' response.pk %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="accept">
+                                <button type="submit" class="btn btn-success w-100">✅ Принять</button>
+                            </form>
+                        {% else %}
+                            <form method="post" action="{% url 'response_update' response.pk %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="reject">
+                                <button type="submit" class="btn btn-warning w-100">↩️ Отклонить</button>
+                            </form>
+                        {% endif %}
+                        
+                        <form method="post" action="{% url 'response_update' response.pk %}" 
+                              onsubmit="return confirm('Удалить этот отзыв?')">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete">
+                            <button type="submit" class="btn btn-danger w-100">🗑️ Удалить</button>
+                        </form>
+                        
+                        <a href="{% url 'post_detail' response.post.slug %}" class="btn btn-outline-warning w-100">
+                            🔍 К объявлению
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Пагинация -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">««</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">«</a>
+                </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">»</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">»»</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+{% else %}
+    <div class="text-center mt-5">
+        <div class="mmo-card p-5">
+            <h3>📭 Отзывов пока нет</h3>
+            <p class="text-muted">Как только пользователи начнут оставлять отзывы на ваши объявления, они появятся здесь.</p>
+            <a href="{% url 'my_posts' %}" class="btn btn-warning">📋 Посмотреть мои объявления</a>
+        </div>
+    </div>
+{% endif %}
+
+<style>
+.mmo-card {
+    background: rgba(30, 55, 153, 0.8);
+    border: 2px solid #4a69bd;
+    border-radius: 10px;
+}
+.response-content {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border-left: 3px solid #f6b93b;
+}
+.border-success {
+    border-color: #28a745 !important;
+}
+.border-warning {
+    border-color: #ffc107 !important;
+}
+</style>
+{% endblock %}

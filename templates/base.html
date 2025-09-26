@@ -46,6 +46,7 @@
                     <span class="navbar-text me-3">👋 Привет, {{ user.username }}!</span>
                     <a class="nav-link" href="{% url 'create_post' %}">💲 Создать объявление</a>
                     <a class="nav-link" href="{% url 'my_posts' %}"> 📰 Мои объявления</a>
+                    <a class="nav-link" href="{% url 'response_list' %}">💬 Управление отзывами</a>
                     <a class="nav-link" href="{% url 'account_logout' %}">🚪 Выйти</a>
                 {% else %}
                     <a class="nav-link" href="{% url 'account_login' %}">🔑 Войти</a>

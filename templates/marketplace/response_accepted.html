@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+        .header { text-align: center; color: #28a745; }
+        .content { margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✅ Ваш отзыв принят!</h1>
+        </div>
+        <div class="content">
+            <p>Автор объявления <strong>"{{ post.title }}"</strong> принял ваш отзыв.</p>
+            <p>Теперь ваш отзыв виден другим пользователям на странице объявления.</p>
+            <a href="{{ request.scheme }}://{{ request.get_host }}{% url 'post_detail' post.slug %}">Посмотреть объявление</a>
+        </div>
+    </div>
+</body>
+</html>
