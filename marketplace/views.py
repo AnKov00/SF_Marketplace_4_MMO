@@ -1,3 +1,4 @@
+from django.db.models.query import QuerySet
 from django.views.generic import ListView, DetailView, CreateView
 from django.urls import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -35,6 +36,21 @@ class PostView(ListView):
         context['categories'] = Category.objects.all()
         return context
 
+
+class MyPostList(LoginRequiredMixin, ListView):
+    model = Post
+    template_name = 'marketplace/my_post.html'
+    context_object_name = 'my_posts'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Post.objects.filter(author=self.request.user).order_by('-updated_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['total_posts'] = self.get_queryset().count()
+        return context
+
 class PostDetailView(DetailView):
     model = Post
     template_name = 'marketplace/post_detail.html'
@@ -47,7 +63,8 @@ class PostDetailView(DetailView):
         # Получаем принятые отзывы
         context['responses'] = self.object.post_response.filter(is_accepted=True)
         return context
-    
+ 
+
 
 class CreateResponse(LoginRequiredMixin, CreateView):
     model = Response

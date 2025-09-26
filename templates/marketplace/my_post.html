@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Мои объявления - MMO Marketplace{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>📋 Мои объявления</h1>
+    <a href="{% url 'create_post' %}" class="btn btn-warning">➕ Создать объявление</a>
+</div>
+
+<!-- Статистика -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="mmo-card p-3">
+            <h5>📊 Статистика</h5>
+            <p class="mb-1">Всего объявлений: <strong>{{ total_posts }}</strong></p>
+            <p class="mb-1">Активных: <strong class="text-success">{{ my_posts|length }}</strong></p>
+            <p class="mb-0">Неактивных: <strong class="text-secondary">{{ total_posts|add:"0" }}</strong></p>
+        </div>
+    </div>
+</div>
+
+{% if my_posts %}
+    <div class="row">
+        {% for post in my_posts %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="mmo-card p-3 h-100 d-flex flex-column {% if not post.is_active %}opacity-75{% endif %}">
+                <!-- Заголовок с статусом -->
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="mb-0">
+                        <a href="{% url 'post_detail' post.slug %}" class="text-white text-decoration-none">
+                            {{ post.title }}
+                        </a>
+                    </h5>
+                    <span class="badge {% if post.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                        {% if post.is_active %}✅ Активно{% else %}⏸️ Неактивно{% endif %}
+                    </span>
+                </div>
+
+                <!-- Категория и тип -->
+                <div class="d-flex gap-2 mb-2 flex-wrap">
+                    <span class="badge bg-danger">{{ post.category.name }}</span>
+                    <span class="badge {% if post.type_post == 'wts' %}bg-success{% else %}bg-info{% endif %}">
+                        {% if post.type_post == 'wts' %}💰 Продажа{% else %}🛒 Покупка{% endif %}
+                    </span>
+                </div>
+
+                <!-- Краткое описание -->
+                <p class="text-muted small mb-3">
+                    {{ post.content|truncatewords:20 }}
+                </p>
+
+                <!-- Цена и дата -->
+                <div class="mt-auto">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="price-tag">{{ post.price }} золота</span>
+                        <small class="text-muted">{{ post.updated_at|date:"d.m.Y" }}</small>
+                    </div>
+
+                    <!-- Кнопки управления -->
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'post_detail' post.slug %}" class="btn btn-outline-warning btn-sm flex-fill">
+                            🔍 Просмотреть
+                        </a>
+                        {% if post.is_active %}
+                            <button class="btn btn-outline-secondary btn-sm" title="Деактивировать">
+                                ⏸️
+                            </button>
+                        {% else %}
+                            <button class="btn btn-outline-success btn-sm" title="Активировать">
+                                ▶️
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Пагинация -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">«« Первая</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">« Назад</a>
+                </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперед »</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Последняя »»</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+{% else %}
+    <div class="text-center mt-5">
+        <div class="mmo-card p-5">
+            <h3>📭 У вас пока нет объявлений</h3>
+            <p class="text-muted">Создайте первое объявление и начните торговать!</p>
+            <a href="{% url 'create_post' %}" class="btn btn-primary btn-lg">➕ Создать первое объявление</a>
+        </div>
+    </div>
+{% endif %}
+
+<style>
+.mmo-card {
+    background: rgba(30, 55, 153, 0.8);
+    border: 2px solid #4a69bd;
+    border-radius: 10px;
+}
+.price-tag {
+    background: #f6b93b;
+    color: #2f3640;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 14px;
+}
+.opacity-75 {
+    opacity: 0.75;
+}
+</style>
+{% endblock %}
